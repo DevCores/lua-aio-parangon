@@ -245,13 +245,15 @@ CharDBQuery('CREATE TABLE IF NOT EXISTS `'..Config.dbName..'`.`characters_parang
 --
 --[[ ///// SOME PLAYER FUNCTIONS \\\\\ ]]--
 function ParangonAddon.setLevelUp(event, player)
-  local pAcc = player:GetAccountId()
+  local pAcc = player:GetAccountId();
+  local pGuid = player:GetGUIDLow();
 
   if (PlayerAccount[pAcc].exp >= (PlayerAccount[pAcc].level * Parangon.Config.maxExp)) then
     if (PlayerAccount[pAcc].level < Parangon.Config.maxLevel) then
       PlayerAccount[pAcc].level = PlayerAccount[pAcc].level + 1
       PlayerAccount[pAcc].exp = 0
       player:SendBroadcastMessage("Congratulations, you've just climbed up a level of Paragon.");
+      PlayerCharacter[pGuid].points = (PlayerAccount[pAcc].level * Config.pointsPerLevel) - getCharacter:GetUInt32(2) - getCharacter:GetUInt32(3) - getCharacter:GetUInt32(4) - getCharacter:GetUInt32(5);
     end
   end
 end
