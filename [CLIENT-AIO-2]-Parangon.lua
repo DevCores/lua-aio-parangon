@@ -26,8 +26,7 @@ $$$$$$$$/ $$ |____    ______   _______  $$ |   __   _______         /$$/ /$$$$$$
 
   Thank you for your support.
 
-    Discord: iThorgrimHub#1775
-    Paypal: https://www.paypal.me/LevelLouis
+    Discord: iThorgrim#1775
 
 
 ]]--
