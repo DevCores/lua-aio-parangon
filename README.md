@@ -7,7 +7,7 @@
 	I share my AIO - Parangon System.
 
 	Parangon is a script that allows you to set up Diablo 3's Parangon system.
-	This one is provided without interface, you can place your statistics from the .parangon command.
+	This one is provided with interface, you can place your statistics.
 
   	You will be able to earn Parangon points all Levels, experience points can be earned via PvE & PvP.
 
