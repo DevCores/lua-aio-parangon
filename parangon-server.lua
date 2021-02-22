@@ -19,7 +19,7 @@
  See you soon for a next script.
 ]]--
 
-local aio = AIO or require("aio")
+local AIO = AIO or require("aio")
 
 local parangon = {
 
@@ -42,11 +42,43 @@ local parangon = {
         [7477] = 'Stamina',
         [7468] = 'Intellect',
     },
-
-    parangon_aio = aio.AddHandlers("AIO_Parangon", {})
 }
 
+local parangon_addon = AIO.AddHandlers("AIO_Parangon", {})
+
 parangon.account = {}
+
+function parangon_addon.sendInformations(msg, player)
+    local pGuid = player:GetGUIDLow()
+    local pAcc = player:GetAccountId()
+
+    local temp = {
+        stats = {},
+        level = 1,
+        points = 1,
+    }
+    for stat, _ in pairs(parangon.spells) do
+        temp.stats[stat] = player:GetData('parangon_stats_'..stat)
+    end
+
+    if not parangon.account[pAcc] then
+        parangon.account[pAcc] = {
+            level = 1,
+            exp = 0,
+            exp_max = 0,
+        }
+    end
+
+    temp.level = parangon.account[player:GetAccountId()].level
+    temp.points = player:GetData('parangon_points')
+
+    return msg:Add("AIO_Parangon", "setInfo", temp.stats, temp.level, temp.points)
+end
+AIO.AddOnInit(parangon_addon.sendInformations)
+
+function parangon.setAddonInfo(player)
+    parangon_addon.sendInformations(AIO.Msg(), player):Send(player)
+end
 
 function parangon.onServerStart(event)
     CharDBExecute('CREATE DATABASE IF NOT EXISTS `'..parangon.config.db_name..'`;')
@@ -56,7 +88,7 @@ function parangon.onServerStart(event)
 end
 RegisterServerEvent(14, parangon.onServerStart)
 
-function parangon.setStats(player)
+function parangon_addon.setStats(player)
     local pLevel = player:GetLevel()
 
     if pLevel >= parangon.config.minLevel then
@@ -71,13 +103,13 @@ end
 -- flags
 -- true == add_points
 -- false == remove_points
-function parangon.setStatsInformation(player, stat, value, flags)
+function parangon_addon.setStatsInformation(player, stat, value, flags)
   local pCombat = player:IsInCombat()
   if (not pCombat) then
     local pLevel = player:GetLevel()
     if (pLevel >= parangon.config.minLevel) then
       if flags then
-        if ((player:GetData('parangon_points') - value) > 0) then
+        if ((player:GetData('parangon_points') - value) >= 0) then
           player:SetData('parangon_stats_'..stat, (player:GetData('parangon_stats_'..stat) + value))
           player:SetData('parangon_points', (player:GetData('parangon_points') - value))
         else
@@ -114,6 +146,7 @@ function parangon.onLogin(event, player)
     local getParangonCharInfo = CharDBQuery('SELECT strength, agility, stamina, intellect FROM `'..parangon.config.db_name..'`.`characters_parangon` WHERE account_id = '..pAcc)
     if getParangonCharInfo then
       player:setParangonInfo(getParangonCharInfo:GetUInt32(0), getParangonCharInfo:GetUInt32(1), getParangonCharInfo:GetUInt32(2), getParangonCharInfo:GetUInt32(3))
+      player:SetData('parangon_points', getParangonCharInfo:GetUInt32(0) + getParangonCharInfo:GetUInt32(1) + getParangonCharInfo:GetUInt32(2) + getParangonCharInfo:GetUInt32(3))
     else
       local pGuid = player:GetGUIDLow()
       CharDBExecute('INSERT INTO `'..parangon.config.db_name..'`.`characters_parangon` VALUES ('..pAcc..', '..pGuid..', 0, 0, 0, 0)')
@@ -136,6 +169,9 @@ function parangon.onLogin(event, player)
     else
       AuthDBExecute('INSERT INTO `'..parangon.config.db_name..'`.`account_parangon` VALUES ('..pAcc..', 1, 0)')
     end
+
+    parangon_addon.setStats(player)
+    player:SetData('parangon_points', (parangon.account[pAcc].level * parangon.config.pointsPerLevel) - player:GetData('parangon_points'))
 end
 RegisterPlayerEvent(3, parangon.onLogin)
 
