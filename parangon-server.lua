@@ -24,10 +24,10 @@ local AIO = AIO or require("aio")
 local parangon = {
 
     config = {
-        db_name = 'R1_Eluna',
+        db_name = 'ac_eluna',
 
         pointsPerLevel = 1,
-        minLevel = 1,
+        minLevel = 70,
 
         expMulti = 1,
         expMax = 500,
