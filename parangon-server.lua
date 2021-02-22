@@ -27,7 +27,7 @@ local parangon = {
         db_name = 'R1_Eluna',
 
         pointsPerLevel = 1,
-        minLevel = 70,
+        minLevel = 1,
 
         expMulti = 1,
         expMax = 500,
@@ -71,8 +71,12 @@ function parangon_addon.sendInformations(msg, player)
 
     temp.level = parangon.account[player:GetAccountId()].level
     temp.points = player:GetData('parangon_points')
+    temp.exps = {
+        exp = parangon.account[player:GetAccountId()].exp,
+        exp_max = parangon.account[player:GetAccountId()].exp_max
+    }
 
-    return msg:Add("AIO_Parangon", "setInfo", temp.stats, temp.level, temp.points)
+    return msg:Add("AIO_Parangon", "setInfo", temp.stats, temp.level, temp.points, temp.exps)
 end
 AIO.AddOnInit(parangon_addon.sendInformations)
 
@@ -112,6 +116,8 @@ function parangon_addon.setStatsInformation(player, stat, value, flags)
         if ((player:GetData('parangon_points') - value) >= 0) then
           player:SetData('parangon_stats_'..stat, (player:GetData('parangon_stats_'..stat) + value))
           player:SetData('parangon_points', (player:GetData('parangon_points') - value))
+
+          player:SetData('parangon_points_spend', (player:GetData('parangon_points_spend') + value))
         else
           player:SendNotification('You have no more points to award.')
           return false
@@ -120,6 +126,8 @@ function parangon_addon.setStatsInformation(player, stat, value, flags)
         if (player:GetData('parangon_stats_'..stat) > 0) then
           player:SetData('parangon_stats_'..stat, (player:GetData('parangon_stats_'..stat) - value))
           player:SetData('parangon_points', (player:GetData('parangon_points') + value))
+
+          player:SetData('parangon_points_spend', (player:GetData('parangon_points_spend') - value))
         else
           player:SendNotification('You have no points to take out.')
           return false
@@ -152,6 +160,7 @@ function parangon.onLogin(event, player)
       CharDBExecute('INSERT INTO `'..parangon.config.db_name..'`.`characters_parangon` VALUES ('..pAcc..', '..pGuid..', 0, 0, 0, 0)')
       player:setParangonInfo(0, 0, 0, 0)
     end
+    player:SetData('parangon_points_spend', 0)
 
     if not parangon.account[pAcc] then
       parangon.account[pAcc] = {
@@ -208,3 +217,56 @@ function parangon.setPlayers(event)
   end
 end
 RegisterServerEvent(16, parangon.setPlayers)
+
+function parangon.setExp(player, victim)
+    local pLevel = player:GetLevel()
+    local vLevel = victim:GetLevel()
+    local pAcc = player:GetAccountId()
+
+    if (vLevel - pLevel <= 10) and (vLevel - pLevel >= 0) or (pLevel - vLevel <= 10) and (pLevel - vLevel >= 0) then
+        local isPlayer = GetGUIDEntry(victim:GetGUID())
+        if (isPlayer == 0) then
+            parangon.account[pAcc].exp = parangon.account[pAcc].exp + parangon.config.pvpKill
+            player:SendBroadcastMessage('Your victim gives you '..parangon.config.pvpKill..' Parangon experience points.')
+        else
+            parangon.account[pAcc].exp = parangon.account[pAcc].exp + parangon.config.pveKill
+            player:SendBroadcastMessage('Your victim gives you '..parangon.config.pveKill..' Parangon experience points.')
+        end
+    end
+
+    if parangon.account[pAcc].exp >= parangon.account[pAcc].exp_max then
+        player:SetParangonLevel(1)
+    end
+end
+
+function parangon.onKillCreatureOrPlayer(event, player, victim)
+    local pLevel = player:GetLevel()
+
+    if (pLevel >= parangon.config.minLevel) then
+        local pGroup = player:GetGroup()
+        local vLevel = victim:GetLevel()
+        if pGroup then
+            for _, player in pairs(pGroup:GetMembers()) do
+                parangon.setExp(player, victim)
+            end
+        else
+            parangon.setExp(player, victim)
+        end
+    end
+end
+RegisterPlayerEvent(6, parangon.onKillCreatureOrPlayer)
+RegisterPlayerEvent(7, parangon.onKillCreatureOrPlayer)
+
+function Player:SetParangonLevel(level)
+    local pAcc = self:GetAccountId()
+
+    parangon.account[pAcc].level = parangon.account[pAcc].level + level
+    parangon.account[pAcc].exp = 0
+    parangon.account[pAcc].exp_max = parangon.account[pAcc].exp_max * parangon.account[pAcc].level
+    self:SetData('parangon_points', (((parangon.account[pAcc].level * parangon.config.pointsPerLevel) - self:GetData('parangon_points')) + self:GetData('parangon_points') - self:GetData('parangon_points_spend')))
+    parangon.setAddonInfo(self)
+
+    self:CastSpell(self, 24312, true)
+    self:RemoveAura( 24312 )
+    self:SendNotification('|CFF00A2FFYou have just passed a level of Paragon.\nCongratulations, you are now level '..parangon.account[pAcc].level..'!')
+end

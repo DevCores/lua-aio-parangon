@@ -91,6 +91,23 @@ parangon.closeButton = CreateFrame("Button", parangon.closeButton, parangon.main
   parangon.closeButton:SetSize(26, 26)
   parangon.closeButton:SetFrameLevel(2)
 
+parangon.expIcon = CreateFrame("Frame", parangon.expIcon, parangon.mainWindow)
+  parangon.expIcon:SetSize(39, 39)
+  parangon.expIcon:SetBackdrop({
+    bgFile = "Interface/Icons/garr_currencyicon-xp",
+    insets = { left = 0, right = 0, top = 0, bottom = 0 }
+  })
+  parangon.expIcon:SetPoint("TOP", 0, -115)
+  parangon.expIcon:SetFrameLevel(6)
+
+
+parangon.expText = parangon.mainWindow:CreateFontString(parangon.expText)
+  parangon.expText:SetFont("Fonts\\FRIZQT__.TTF", 13)
+  parangon.expText:SetSize(190, 3)
+  parangon.expText:SetPoint("TOP", 0, -155)
+  parangon.expText:SetShadowColor(0.156, 0.2, 0.2)
+  parangon.expText:SetShadowOffset(0.5, 0)
+
 
 parangon.buttonsCoords = {
   global = {
@@ -252,6 +269,7 @@ parangon.characterFrameBorder = CreateFrame("Button", parangon.characterFrameBor
   parangon.characterFrameBorder:SetFrameLevel(1000)
   parangon.characterFrameBorder:SetFrameLevel(7)
 
+
   parangon.characterFrameBorder:SetScript("OnEnter", function(self, button, down)
     GameTooltip:SetOwner(UIParent, "ANCHOR_BOTTOMRIGHT", 150, 150)
     GameTooltip:AddLine("Paragon Infos", 1, 1, 1)
@@ -260,6 +278,7 @@ parangon.characterFrameBorder = CreateFrame("Button", parangon.characterFrameBor
     for spellid, subtable in pairs(parangon.spellsList) do
       GameTooltip:AddLine("|CFFFFFFFF+ "..parangon.rightText[spellid]:GetText().."|CFFFFFFFF "..subtable.name.."|r");
     end
+    GameTooltip:AddLine("\n|CFFFFFFFF"..parangon.expText:GetText().."|r");
 
     GameTooltip:Show()
   end)
@@ -285,11 +304,13 @@ parangon.characterFrameBackground = CreateFrame("Frame", parangon.characterFrame
   parangon.characterFrameBackground:SetPoint("CENTER", 0, 0)
   parangon.characterFrameBackground:SetFrameLevel(6)
 
-function parangon_addon.setInfo(player, stats, level, points)
+function parangon_addon.setInfo(player, stats, level, points, exps)
   for statid, value in pairs(stats) do
-    parangon.rightText[statid]:SetText("|CFF00CE00" .. value .. "|r")
+    parangon.rightText[statid]:SetText("|CFF00CE00" .. value)
   end
 
-  parangon.levelText:SetText("|CFFFFFFFF" .. level .. "|r")
+  parangon.levelText:SetText("|CFFFFFFFF" .. level)
   parangon.pointsLeft:SetText("You still have |CFF00CE00" .. points .. "|r left to spend.")
+
+  parangon.expText:SetText("|CFFC758FE(".. exps.exp .. " / " .. exps.exp_max .. ")")
 end
