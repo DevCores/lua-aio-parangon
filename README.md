@@ -25,9 +25,9 @@
 - Copy the AIO_Server to wherever your lua_scripts folder resides on your server
 
 
-- Copy the files [CLIENT-AIO-2]-Parangon.lua, [CLIENT-AIO]-Parangon.lua and [SERVER-AIO]-Parangon.lua into your lua_scripts folder on your server
+- Copy the files parangon-client.lua, parangon-server.lua into your lua_scripts folder on your server
 - Copy the folder Patch-Z.MPQ to your game clients data folder
-- Next configure the script by opening in notepad or similar [SERVER-AIO]-Parangon.lua and go to line 40 then replace ac_eluna with whatever database name you created
+- Next configure the script by opening in notepad or similar parangon-server.lua and go to line 40 then replace ac_eluna with whatever database name you created
 - From the worldserver prompt type .reload eluna
 
 Thanks to @Naruon for the tutorial ;)
