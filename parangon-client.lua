@@ -43,7 +43,7 @@ parangon.mainWindowTexture = parangon.mainWindow:CreateTexture()
 parangon.mainTitle = CreateFrame("Frame", parangon.mainTitle, parangon.mainWindow)
   parangon.mainTitle:SetSize(150, 45)
   parangon.mainTitle:SetPoint("TOP", 0, 20)
-  parangon.mainTitle:SetFrameLevel(5)
+  parangon.mainTitle:SetFrameLevel(UIParent:GetFrameLevel() + 1000)
 
 parangon.mainTitleTexture = parangon.mainWindow:CreateTexture()
   parangon.mainTitleTexture:SetAllPoints(parangon.mainTitle)
@@ -271,7 +271,7 @@ parangon.characterFrameBorder = CreateFrame("Button", parangon.characterFrameBor
 
 
   parangon.characterFrameBorder:SetScript("OnEnter", function(self, button, down)
-    GameTooltip:SetOwner(UIParent, "ANCHOR_BOTTOMRIGHT", 150, 150)
+    GameTooltip:SetOwner(UIParent, "ANCHOR_CURSOR", 1, 5)
     GameTooltip:AddLine("Paragon Infos", 1, 1, 1)
     GameTooltip:AddLine("Displays/hides the Paragon points allocation window.\n"..parangon.pointsLeft:GetText().."\n")
 

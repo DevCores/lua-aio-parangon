@@ -24,16 +24,18 @@ local AIO = AIO or require("aio")
 local parangon = {
 
     config = {
-        db_name = 'ac_eluna',
+        db_name = 'R1_Eluna',
 
         pointsPerLevel = 1,
-        minLevel = 70,
+        minLevel = 1,
 
         expMulti = 1,
         expMax = 500,
 
         pveKill = 100,
         pvpKill = 10,
+
+        levelDiff = 10,
     },
 
     spells = {
@@ -223,7 +225,7 @@ function parangon.setExp(player, victim)
     local vLevel = victim:GetLevel()
     local pAcc = player:GetAccountId()
 
-    if (vLevel - pLevel <= 10) and (vLevel - pLevel >= 0) or (pLevel - vLevel <= 10) and (pLevel - vLevel >= 0) then
+    if (vLevel - pLevel <= parangon.config.levelDiff) and (vLevel - pLevel >= 0) or (pLevel - vLevel <= parangon.config.levelDiff) and (pLevel - vLevel >= 0) then
         local isPlayer = GetGUIDEntry(victim:GetGUID())
         if (isPlayer == 0) then
             parangon.account[pAcc].exp = parangon.account[pAcc].exp + parangon.config.pvpKill
@@ -232,6 +234,7 @@ function parangon.setExp(player, victim)
             parangon.account[pAcc].exp = parangon.account[pAcc].exp + parangon.config.pveKill
             player:SendBroadcastMessage('Your victim gives you '..parangon.config.pveKill..' Parangon experience points.')
         end
+        parangon.setAddonInfo(player)
     end
 
     if parangon.account[pAcc].exp >= parangon.account[pAcc].exp_max then
