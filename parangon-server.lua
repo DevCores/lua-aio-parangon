@@ -265,7 +265,7 @@ function Player:SetParangonLevel(level)
 
     parangon.account[pAcc].level = parangon.account[pAcc].level + level
     parangon.account[pAcc].exp = 0
-    parangon.account[pAcc].exp_max = parangon.account[pAcc].exp_max * parangon.account[pAcc].level
+    parangon.account[pAcc].exp_max = parangon.config.expMax * parangon.account[pAcc].level
     self:SetData('parangon_points', (((parangon.account[pAcc].level * parangon.config.pointsPerLevel) - self:GetData('parangon_points')) + self:GetData('parangon_points') - self:GetData('parangon_points_spend')))
     parangon.setAddonInfo(self)
 
