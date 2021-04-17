@@ -50,6 +50,13 @@ local parangon_addon = AIO.AddHandlers("AIO_Parangon", {})
 
 parangon.account = {}
 
+function Player:setParangonInfo(strength, agility, stamina, intellect)
+    self:SetData('parangon_stats_7464', strength)
+    self:SetData('parangon_stats_7471', agility)
+    self:SetData('parangon_stats_7477', stamina)
+    self:SetData('parangon_stats_7468', intellect)
+end
+
 function parangon_addon.sendInformations(msg, player)
     local pGuid = player:GetGUIDLow()
     local pAcc = player:GetAccountId()
@@ -94,7 +101,7 @@ function parangon.onServerStart(event)
 end
 RegisterServerEvent(14, parangon.onServerStart)
 
-function parangon_addon.setStats(player)
+function parangon.setStats(player)
     local pLevel = player:GetLevel()
 
     if pLevel >= parangon.config.minLevel then
@@ -104,119 +111,166 @@ function parangon_addon.setStats(player)
             player:GetAura(spell):SetStackAmount(player:GetData('parangon_stats_'..spell))
         end
     end
+    parangon.setAddonInfo(player)
 end
 
--- flags
--- true == add_points
--- false == remove_points
-function parangon_addon.setStatsInformation(player, stat, value, flags)
-  local pCombat = player:IsInCombat()
-  if (not pCombat) then
-    local pLevel = player:GetLevel()
-    if (pLevel >= parangon.config.minLevel) then
-      if flags then
-        if ((player:GetData('parangon_points') - value) >= 0) then
-          player:SetData('parangon_stats_'..stat, (player:GetData('parangon_stats_'..stat) + value))
-          player:SetData('parangon_points', (player:GetData('parangon_points') - value))
+function parangon.setStatsInformation(player, stat, value, flags)
+    local pCombat = player:IsInCombat()
+    if (not pCombat) then
+        local pLevel = player:GetLevel()
+        if (pLevel >= parangon.config.minLevel) then
 
-          player:SetData('parangon_points_spend', (player:GetData('parangon_points_spend') + value))
+            if not tonumber(value) or value < 0 then
+                if ( player:GetDbLocaleIndex() == 2 ) then
+                  player:SendNotification('Merci d\'entrer un nombre valide.')
+                else
+                  player:SendNotification('Please enter a valid number.')
+                end
+                return false
+            end
+
+            if (flags and player:GetData('parangon_stats_'..stat) + value > parangon.config.maxStat) then
+                if ( player:GetDbLocaleIndex() == 2 ) then
+                  player:SendNotification('Vous ne pouvez plus ajouter de points.')
+                else
+                  player:SendNotification('You can no longer add points.')
+                end
+                return false
+            end
+
+            if flags then
+                if ((player:GetData('parangon_points') - value) >= 0) then
+                    player:SetData('parangon_stats_'..stat, (player:GetData('parangon_stats_'..stat) + value))
+                    parangon.calcPoints(player)
+                else
+                    if ( player:GetDbLocaleIndex() == 2 ) then
+                      player:SendNotification('Vous n\'avez plus de points à attribuer.')
+                    else
+                      player:SendNotification('You have no more points to award.')
+                    end
+                    return false
+                end
+            else
+                if (player:GetData('parangon_stats_'..stat) > 0) then
+                    player:SetData('parangon_stats_'..stat, (player:GetData('parangon_stats_'..stat) - value))
+                    parangon.calcPoints(player)
+                else
+                    if ( player:GetDbLocaleIndex() == 2 ) then
+                      player:SendNotification('Vous n\'avez pas de points à retirer.')
+                    else
+                      player:SendNotification('You have no points to take out.')
+                    end
+                    return false
+                end
+            end
+            parangon.setAddonInfo(player)
         else
-          player:SendNotification('You have no more points to award.')
-          return false
+            if ( player:GetDbLocaleIndex() == 2 ) then
+              player:SendNotification('Vous n\'avez pas le niveau requis pour le faire.')
+            else
+              player:SendNotification('You don\'t have the level required to do that.')
+            end
         end
-      else
-        if (player:GetData('parangon_stats_'..stat) > 0) then
-          player:SetData('parangon_stats_'..stat, (player:GetData('parangon_stats_'..stat) - value))
-          player:SetData('parangon_points', (player:GetData('parangon_points') + value))
-
-          player:SetData('parangon_points_spend', (player:GetData('parangon_points_spend') - value))
+    else
+        if ( player:GetDbLocaleIndex() == 2 ) then
+          player:SendNotification('Vous ne pouvez pas faire ça en combat.')
         else
-          player:SendNotification('You have no points to take out.')
-          return false
+          player:SendNotification('You can\'t do this in combat.')
         end
-      end
-      parangon.setAddonInfo(player)
-    else
-      player:SendNotification('You don\'t have the level required to do that.')
     end
-  else
-    player:SendNotification('You can\'t do this in combat.')
-  end
 end
 
-function Player:setParangonInfo(strength, agility, stamina, intellect)
-  self:SetData('parangon_stats_7464', strength)
-  self:SetData('parangon_stats_7471', agility)
-  self:SetData('parangon_stats_7477', stamina)
-  self:SetData('parangon_stats_7468', intellect)
-end
+function parangon.calcPoints(player)
+  local pAcc = player:GetAccountId()
 
-function parangon.onLogin(event, player)
-    local pAcc = player:GetAccountId()
-    local getParangonCharInfo = CharDBQuery('SELECT strength, agility, stamina, intellect FROM `'..parangon.config.db_name..'`.`characters_parangon` WHERE account_id = '..pAcc)
-    if getParangonCharInfo then
-      player:setParangonInfo(getParangonCharInfo:GetUInt32(0), getParangonCharInfo:GetUInt32(1), getParangonCharInfo:GetUInt32(2), getParangonCharInfo:GetUInt32(3))
-      player:SetData('parangon_points', getParangonCharInfo:GetUInt32(0) + getParangonCharInfo:GetUInt32(1) + getParangonCharInfo:GetUInt32(2) + getParangonCharInfo:GetUInt32(3))
-    else
-      local pGuid = player:GetGUIDLow()
-      CharDBExecute('INSERT INTO `'..parangon.config.db_name..'`.`characters_parangon` VALUES ('..pAcc..', '..pGuid..', 0, 0, 0, 0)')
-      player:setParangonInfo(0, 0, 0, 0)
-    end
-    player:SetData('parangon_points_spend', 0)
-
-    if not parangon.account[pAcc] then
-      parangon.account[pAcc] = {
+  if not parangon.account[pAcc] then
+    parangon.account[pAcc] = {
         level = 1,
         exp = 0,
         exp_max = 0,
-      }
-    end
+    }
+    parangon.onLogin(event, player)
+  end
 
-    local getParangonAccInfo = AuthDBQuery('SELECT level, exp FROM `'..parangon.config.db_name..'`.`account_parangon` WHERE account_id = '..pAcc)
-    if getParangonAccInfo then
-      parangon.account[pAcc].level = getParangonAccInfo:GetUInt32(0)
-      parangon.account[pAcc].exp = getParangonAccInfo:GetUInt32(1)
-      parangon.account[pAcc].exp_max = parangon.config.expMax * parangon.account[pAcc].level
+  local str = player:GetData('parangon_stats_7464')
+  local agi = player:GetData('parangon_stats_7471')
+  local sta = player:GetData('parangon_stats_7477')
+  local int = player:GetData('parangon_stats_7468')
+
+  local points_spend = str + agi + sta + int
+  local points_calc = parangon.account[pAcc].level * parangon.config.pointsPerLevel
+
+  points_calc = points_calc - points_spend
+
+  player:SetData('parangon_points', points_calc)
+end
+
+function parangon.onLogin(event, player)
+    local pGuid = player:GetGUIDLow()
+
+    local getParangonCharInfo = CharDBQuery('SELECT strength, agility, stamina, intellect FROM `'..parangon.config.db_name..'`.`characters_parangon` WHERE guid = '..pGuid)
+    if getParangonCharInfo then
+        player:setParangonInfo(getParangonCharInfo:GetUInt32(0), getParangonCharInfo:GetUInt32(1), getParangonCharInfo:GetUInt32(2), getParangonCharInfo:GetUInt32(3))
     else
-      AuthDBExecute('INSERT INTO `'..parangon.config.db_name..'`.`account_parangon` VALUES ('..pAcc..', 1, 0)')
+        local pGuid = player:GetGUIDLow()
+        CharDBExecute('INSERT INTO `'..parangon.config.db_name..'`.`characters_parangon` VALUES ('..pAcc..', '..pGuid..', 0, 0, 0, 0)')
+        player:setParangonInfo(0, 0, 0, 0)
     end
 
-    parangon_addon.setStats(player)
-    player:SetData('parangon_points', (parangon.account[pAcc].level * parangon.config.pointsPerLevel) - player:GetData('parangon_points'))
+    local pAcc = player:GetAccountId()
+    if not parangon.account[pAcc] then
+        parangon.account[pAcc] = {
+            level = 1,
+            exp = 0,
+            exp_max = 0,
+        }
+
+        local getParangonAccInfo = AuthDBQuery('SELECT level, exp FROM `'..parangon.config.db_name..'`.`account_parangon` WHERE account_id = '..pAcc)
+        if getParangonAccInfo then
+            parangon.account[pAcc].level = getParangonAccInfo:GetUInt32(0)
+            parangon.account[pAcc].exp = getParangonAccInfo:GetUInt32(1)
+            parangon.account[pAcc].exp_max = parangon.config.expMax * parangon.account[pAcc].level
+        else
+            AuthDBExecute('INSERT INTO `'..parangon.config.db_name..'`.`account_parangon` VALUES ('..pAcc..', 1, 0)')
+        end
+    end
+
+    parangon.calcPoints(player)
+    parangon.setStats(player)
 end
 RegisterPlayerEvent(3, parangon.onLogin)
 
 function parangon.getPlayers(event)
-  for _, player in pairs(GetPlayersInWorld()) do
-    parangon.onLogin(event, player)
-  end
-  io.write('Eluna :: Parangon System start \n')
+    for _, player in pairs(GetPlayersInWorld()) do
+        parangon.onLogin(event, player)
+    end
+    io.write('Eluna :: Parangon System start \n')
 end
 RegisterServerEvent(33, parangon.getPlayers)
 
 function parangon.onLogout(event, player)
-  local pAcc = player:GetAccountId()
-  local pGuid = player:GetGUIDLow()
-  local strength, agility, stamina, intellect = player:GetData('parangon_stats_7464'), player:GetData('parangon_stats_7471'), player:GetData('parangon_stats_7477'), player:GetData('parangon_stats_7468')
-  CharDBExecute('REPLACE INTO `'..parangon.config.db_name..'`.`characters_parangon` VALUES ('..pAcc..', '..pGuid..', '..strength..', '..agility..', '..stamina..', '..intellect..')')
+    local pAcc = player:GetAccountId()
+    local pGuid = player:GetGUIDLow()
+    local strength, agility, stamina, intellect = player:GetData('parangon_stats_7464'), player:GetData('parangon_stats_7471'), player:GetData('parangon_stats_7477'), player:GetData('parangon_stats_7468')
+    CharDBExecute('REPLACE INTO `'..parangon.config.db_name..'`.`characters_parangon` VALUES ('..pAcc..', '..pGuid..', '..strength..', '..agility..', '..stamina..', '..intellect..')')
 
-  if not parangon.account[pAcc] then
-    parangon.account[pAcc] = {
-      level = 1,
-      exp = 0,
-      exp_max = 0,
-    }
-  end
+    if not parangon.account[pAcc] then
+        parangon.account[pAcc] = {
+            level = 1,
+            exp = 0,
+            exp_max = 0,
+        }
+    end
 
-  local level, exp = parangon.account[pAcc].level, parangon.account[pAcc].exp
-  AuthDBExecute('REPLACE INTO `'..parangon.config.db_name..'`.`account_parangon` VALUES ('..pAcc..', '..level..', '..exp..')')
+    local level, exp = parangon.account[pAcc].level, parangon.account[pAcc].exp
+    AuthDBExecute('REPLACE INTO `'..parangon.config.db_name..'`.`account_parangon` VALUES ('..pAcc..', '..level..', '..exp..')')
 end
 RegisterPlayerEvent(4, parangon.onLogout)
 
 function parangon.setPlayers(event)
-  for _, player in pairs(GetPlayersInWorld()) do
-    parangon.onLogout(event, player)
-  end
+    for _, player in pairs(GetPlayersInWorld()) do
+        parangon.onLogout(event, player)
+    end
 end
 RegisterServerEvent(16, parangon.setPlayers)
 
@@ -229,17 +283,25 @@ function parangon.setExp(player, victim)
         local isPlayer = GetGUIDEntry(victim:GetGUID())
         if (isPlayer == 0) then
             parangon.account[pAcc].exp = parangon.account[pAcc].exp + parangon.config.pvpKill
-            player:SendBroadcastMessage('Your victim gives you '..parangon.config.pvpKill..' Parangon experience points.')
+            if ( player:GetDbLocaleIndex() == 2 ) then
+              player:SendNotification('Votre victime vous donne '..parangon.config.pvpKill..' points d\'expériences Parangon.')
+            else
+              player:SendNotification('Your victim gives you '..parangon.config.pvpKill..' Parangon experience points.')
+            end
         else
             parangon.account[pAcc].exp = parangon.account[pAcc].exp + parangon.config.pveKill
-            player:SendBroadcastMessage('Your victim gives you '..parangon.config.pveKill..' Parangon experience points.')
+            if ( player:GetDbLocaleIndex() == 2 ) then
+              player:SendNotification('Votre victime vous donne '..parangon.config.pveKill..' points d\'expériences Parangon.')
+            else
+              player:SendNotification('Your victim gives you '..parangon.config.pveKill..' Parangon experience points.')
+            end
         end
-        parangon.setAddonInfo(player)
     end
 
     if parangon.account[pAcc].exp >= parangon.account[pAcc].exp_max then
         player:SetParangonLevel(1)
     end
+    parangon.setStats(player)
 end
 
 function parangon.onKillCreatureOrPlayer(event, player, victim)
@@ -266,10 +328,14 @@ function Player:SetParangonLevel(level)
     parangon.account[pAcc].level = parangon.account[pAcc].level + level
     parangon.account[pAcc].exp = 0
     parangon.account[pAcc].exp_max = parangon.config.expMax * parangon.account[pAcc].level
-    self:SetData('parangon_points', (((parangon.account[pAcc].level * parangon.config.pointsPerLevel) - self:GetData('parangon_points')) + self:GetData('parangon_points') - self:GetData('parangon_points_spend')))
-    parangon.setAddonInfo(self)
+
+    parangon.calcPoints(self)
 
     self:CastSpell(self, 24312, true)
     self:RemoveAura( 24312 )
-    self:SendNotification('|CFF00A2FFYou have just passed a level of Paragon.\nCongratulations, you are now level '..parangon.account[pAcc].level..'!')
+    if ( player:GetDbLocaleIndex() == 2 ) then
+      self:SendNotification('|CFF00A2FFVous venez de passer un niveau de Paragon.\nFélicitations, vous êtes maintenant de niveau '..parangon.account[pAcc].level..'!')
+    else
+      self:SendNotification('|CFF00A2FFYou have just passed a level of Paragon.\nCongratulations, you are now level '..parangon.account[pAcc].level..'!')
+    end
 end
