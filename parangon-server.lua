@@ -36,6 +36,8 @@ local parangon = {
         pvpKill = 10,
 
         levelDiff = 10,
+
+        maxStat = 255,
     },
 
     spells = {
