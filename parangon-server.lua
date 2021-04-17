@@ -114,7 +114,7 @@ function parangon.setStats(player)
     parangon.setAddonInfo(player)
 end
 
-function parangon.setStatsInformation(player, stat, value, flags)
+function parangon_addon.setStatsInformation(player, stat, value, flags)
     local pCombat = player:IsInCombat()
     if (not pCombat) then
         local pLevel = player:GetLevel()
