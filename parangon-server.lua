@@ -133,9 +133,9 @@ function parangon_addon.setStatsInformation(player, stat, value, flags)
 
             if (flags and player:GetData('parangon_stats_'..stat) + value > parangon.config.maxStat) then
                 if ( player:GetDbLocaleIndex() == 2 ) then
-                  player:BroadcastMessage('Vous ne pouvez plus ajouter de points.')
+                  player:SendBroadcastMessage('Vous ne pouvez plus ajouter de points.')
                 else
-                  player:BroadcastMessage('You can no longer add points.')
+                  player:SendBroadcastMessage('You can no longer add points.')
                 end
                 return false
             end
@@ -168,16 +168,16 @@ function parangon_addon.setStatsInformation(player, stat, value, flags)
             parangon.setAddonInfo(player)
         else
             if ( player:GetDbLocaleIndex() == 2 ) then
-              player:BroadcastMessage('Vous n\'avez pas le niveau requis pour le faire.')
+              player:SendBroadcastMessage('Vous n\'avez pas le niveau requis pour le faire.')
             else
-              player:BroadcastMessage('You don\'t have the level required to do that.')
+              player:SendBroadcastMessage('You don\'t have the level required to do that.')
             end
         end
     else
         if ( player:GetDbLocaleIndex() == 2 ) then
-          player:BroadcastMessage('Vous ne pouvez pas faire ça en combat.')
+          player:SendBroadcastMessage('Vous ne pouvez pas faire ça en combat.')
         else
-          player:BroadcastMessage('You can\'t do this in combat.')
+          player:SendBroadcastMessage('You can\'t do this in combat.')
         end
     end
 end
@@ -286,16 +286,16 @@ function parangon.setExp(player, victim)
         if (isPlayer == 0) then
             parangon.account[pAcc].exp = parangon.account[pAcc].exp + parangon.config.pvpKill
             if ( player:GetDbLocaleIndex() == 2 ) then
-              player:BroadcastMessage('Votre victime vous donne '..parangon.config.pvpKill..' points d\'expériences Parangon.')
+              player:SendBroadcastMessage('Votre victime vous donne '..parangon.config.pvpKill..' points d\'expériences Parangon.')
             else
-              player:BroadcastMessage('Your victim gives you '..parangon.config.pvpKill..' Parangon experience points.')
+              player:SendBroadcastMessage('Your victim gives you '..parangon.config.pvpKill..' Parangon experience points.')
             end
         else
             parangon.account[pAcc].exp = parangon.account[pAcc].exp + parangon.config.pveKill
             if ( player:GetDbLocaleIndex() == 2 ) then
-              player:BroadcastMessage('Votre victime vous donne '..parangon.config.pveKill..' points d\'expériences Parangon.')
+              player:SendBroadcastMessage('Votre victime vous donne '..parangon.config.pveKill..' points d\'expériences Parangon.')
             else
-              player:BroadcastMessage('Your victim gives you '..parangon.config.pveKill..' Parangon experience points.')
+              player:SendBroadcastMessage('Your victim gives you '..parangon.config.pveKill..' Parangon experience points.')
             end
         end
     end
@@ -336,8 +336,8 @@ function Player:SetParangonLevel(level)
     self:CastSpell(self, 24312, true)
     self:RemoveAura( 24312 )
     if ( player:GetDbLocaleIndex() == 2 ) then
-      self:BroadcastMessage('|CFF00A2FFVous venez de passer un niveau de Paragon.\nFélicitations, vous êtes maintenant de niveau '..parangon.account[pAcc].level..'!')
+      self:SendBroadcastMessage('|CFF00A2FFVous venez de passer un niveau de Paragon.\nFélicitations, vous êtes maintenant de niveau '..parangon.account[pAcc].level..'!')
     else
-      self:BroadcastMessage('|CFF00A2FFYou have just passed a level of Paragon.\nCongratulations, you are now level '..parangon.account[pAcc].level..'!')
+      self:SendBroadcastMessage('|CFF00A2FFYou have just passed a level of Paragon.\nCongratulations, you are now level '..parangon.account[pAcc].level..'!')
     end
 end
