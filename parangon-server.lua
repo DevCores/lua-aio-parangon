@@ -32,19 +32,19 @@ local parangon = {
         expMulti = 1,
         expMax = 500,
 
-        pveKill = 100,
-        pvpKill = 10,
+        pveKill = 150,
+        pvpKill = 50,
 
-        levelDiff = 10,
+        levelDiff = 5,
 
         maxStat = 255,
     },
 
     spells = {
-        [7464] = 'Strength',
-        [7471] = 'Agility',
-        [7477] = 'Stamina',
-        [7468] = 'Intellect',
+        [7464] = 'Сила',
+        [7471] = 'Ловкость',
+        [7477] = 'Выносливость',
+        [7468] = 'Интелект',
     },
 }
 
@@ -99,7 +99,7 @@ function parangon.onServerStart(event)
     CharDBExecute('CREATE DATABASE IF NOT EXISTS `'..parangon.config.db_name..'`;')
     CharDBExecute('CREATE TABLE IF NOT EXISTS `'..parangon.config.db_name..'`.`account_parangon` (`account_id` INT(11) NOT NULL, `level` INT(11) DEFAULT 1, `exp` INT(11) DEFAULT 0, PRIMARY KEY (`account_id`) );');
     CharDBExecute('CREATE TABLE IF NOT EXISTS `'..parangon.config.db_name..'`.`characters_parangon` (`account_id` INT(11) NOT NULL, `guid` INT(11) NOT NULL, `strength` INT(11) DEFAULT 0, `agility` INT(11) DEFAULT 0, `stamina` INT(11) DEFAULT 0, `intellect` INT(11) DEFAULT 0, PRIMARY KEY (`account_id`, `guid`));');
-    io.write('Eluna :: Parangon System start \n')
+    io.write('Parangon FreeWoW запущена \n')
 end
 RegisterServerEvent(14, parangon.onServerStart)
 
@@ -123,8 +123,8 @@ function parangon_addon.setStatsInformation(player, stat, value, flags)
         if (pLevel >= parangon.config.minLevel) then
 
             if not tonumber(value) or value < 0 then
-                if ( player:GetDbLocaleIndex() == 2 ) then
-                  player:SendNotification('Merci d\'entrer un nombre valide.')
+                if ( player:GetDbLocaleIndex() == 8 ) then
+                  player:SendNotification('Пожалуйста, введите действительный номер.')
                 else
                   player:SendNotification('Please enter a valid number.')
                 end
@@ -132,8 +132,8 @@ function parangon_addon.setStatsInformation(player, stat, value, flags)
             end
 
             if (flags and player:GetData('parangon_stats_'..stat) + value > parangon.config.maxStat) then
-                if ( player:GetDbLocaleIndex() == 2 ) then
-                  player:SendBroadcastMessage('Vous ne pouvez plus ajouter de points.')
+                if ( player:GetDbLocaleIndex() == 8 ) then
+                  player:SendBroadcastMessage('Вы больше не можете добавлять очки.')
                 else
                   player:SendBroadcastMessage('You can no longer add points.')
                 end
@@ -145,8 +145,8 @@ function parangon_addon.setStatsInformation(player, stat, value, flags)
                     player:SetData('parangon_stats_'..stat, (player:GetData('parangon_stats_'..stat) + value))
                     parangon.calcPoints(player)
                 else
-                    if ( player:GetDbLocaleIndex() == 2 ) then
-                      player:SendNotification('Vous n\'avez plus de points à attribuer.')
+                    if ( player:GetDbLocaleIndex() == 8 ) then
+                      player:SendNotification('У вас больше нет очков для награждения.')
                     else
                       player:SendNotification('You have no more points to award.')
                     end
@@ -157,8 +157,8 @@ function parangon_addon.setStatsInformation(player, stat, value, flags)
                     player:SetData('parangon_stats_'..stat, (player:GetData('parangon_stats_'..stat) - value))
                     parangon.calcPoints(player)
                 else
-                    if ( player:GetDbLocaleIndex() == 2 ) then
-                      player:SendNotification('Vous n\'avez pas de points à retirer.')
+                    if ( player:GetDbLocaleIndex() == 8 ) then
+                      player:SendNotification('У вас нет очков, чтобы вернуть.')
                     else
                       player:SendNotification('You have no points to take out.')
                     end
@@ -167,15 +167,15 @@ function parangon_addon.setStatsInformation(player, stat, value, flags)
             end
             parangon.setAddonInfo(player)
         else
-            if ( player:GetDbLocaleIndex() == 2 ) then
-              player:SendBroadcastMessage('Vous n\'avez pas le niveau requis pour le faire.')
+            if ( player:GetDbLocaleIndex() == 8 ) then
+              player:SendBroadcastMessage('У вас нет необходимого для этого уровня.')
             else
               player:SendBroadcastMessage('You don\'t have the level required to do that.')
             end
         end
     else
-        if ( player:GetDbLocaleIndex() == 2 ) then
-          player:SendBroadcastMessage('Vous ne pouvez pas faire ça en combat.')
+        if ( player:GetDbLocaleIndex() == 8 ) then
+          player:SendBroadcastMessage('Вы не можете сделать это в бою.')
         else
           player:SendBroadcastMessage('You can\'t do this in combat.')
         end
@@ -208,9 +208,9 @@ function parangon.calcPoints(player)
 end
 
 function parangon.onLogin(event, player)
-    local pGuid = player:GetGUIDLow()
-
-    local getParangonCharInfo = CharDBQuery('SELECT strength, agility, stamina, intellect FROM `'..parangon.config.db_name..'`.`characters_parangon` WHERE guid = '..pGuid)
+    local pAcc = player:GetGUIDLow()
+     player:SendBroadcastMessage('ID '..pAcc..'  ')
+    local getParangonCharInfo = CharDBQuery('SELECT strength, agility, stamina, intellect FROM `'..parangon.config.db_name..'`.`characters_parangon` WHERE guid = '..pAcc)
     if getParangonCharInfo then
         player:setParangonInfo(getParangonCharInfo:GetUInt32(0), getParangonCharInfo:GetUInt32(1), getParangonCharInfo:GetUInt32(2), getParangonCharInfo:GetUInt32(3))
     else
@@ -246,7 +246,7 @@ function parangon.getPlayers(event)
     for _, player in pairs(GetPlayersInWorld()) do
         parangon.onLogin(event, player)
     end
-    io.write('Eluna :: Parangon System start \n')
+    io.write('Parangon FreeWoW запущена \n')
 end
 RegisterServerEvent(33, parangon.getPlayers)
 
@@ -285,17 +285,17 @@ function parangon.setExp(player, victim)
         local isPlayer = GetGUIDEntry(victim:GetGUID())
         if (isPlayer == 0) then
             parangon.account[pAcc].exp = parangon.account[pAcc].exp + parangon.config.pvpKill
-            if ( player:GetDbLocaleIndex() == 2 ) then
-              player:SendBroadcastMessage('Votre victime vous donne '..parangon.config.pvpKill..' points d\'expériences Parangon.')
+            if ( player:GetDbLocaleIndex() == 8 ) then
+              player:SendBroadcastMessage('Ваша жертва дает вам '..parangon.config.pvpKill..' очков FreeWoW Parangon.')
             else
-              player:SendBroadcastMessage('Your victim gives you '..parangon.config.pvpKill..' Parangon experience points.')
+              player:SendBroadcastMessage('Your victim gives you '..parangon.config.pvpKill..' FreeWoW Parangon experience points.')
             end
         else
             parangon.account[pAcc].exp = parangon.account[pAcc].exp + parangon.config.pveKill
-            if ( player:GetDbLocaleIndex() == 2 ) then
-              player:SendBroadcastMessage('Votre victime vous donne '..parangon.config.pveKill..' points d\'expériences Parangon.')
+            if ( player:GetDbLocaleIndex() == 8 ) then
+              player:SendBroadcastMessage('Votre victime vous donne '..parangon.config.pveKill..' очков FreeWoW Parangon.')
             else
-              player:SendBroadcastMessage('Your victim gives you '..parangon.config.pveKill..' Parangon experience points.')
+              player:SendBroadcastMessage('Ваша жертва дает вам '..parangon.config.pveKill..' FreeWoW Parangon experience points.')
             end
         end
     end
@@ -335,9 +335,9 @@ function Player:SetParangonLevel(level)
 
     self:CastSpell(self, 24312, true)
     self:RemoveAura( 24312 )
-    if ( player:GetDbLocaleIndex() == 2 ) then
-      self:SendBroadcastMessage('|CFF00A2FFVous venez de passer un niveau de Paragon.\nFélicitations, vous êtes maintenant de niveau '..parangon.account[pAcc].level..'!')
+    if ( player:GetDbLocaleIndex() == 8 ) then
+      self:SendBroadcastMessage('|CFF00A2FFВы только что прошли уровень FreeWoW Paragon.\nПоздравляю, теперь вы на уровне '..parangon.account[pAcc].level..'!')
     else
-      self:SendBroadcastMessage('|CFF00A2FFYou have just passed a level of Paragon.\nCongratulations, you are now level '..parangon.account[pAcc].level..'!')
+      self:SendBroadcastMessage('|CFF00A2FFYou have just passed a level of Paragon.\n Congratulations, you are now level '..parangon.account[pAcc].level..'!')
     end
 end
