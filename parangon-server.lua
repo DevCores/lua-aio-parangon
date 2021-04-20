@@ -19,7 +19,7 @@
  See you soon for a next script.
 ]]--
 
-local AIO = AIO or require("aio")
+local AIO = AIO or require("AIO")
 
 local parangon = {
 
