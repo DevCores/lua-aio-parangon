@@ -19,7 +19,7 @@
  See you soon for a next script.
 ]]--
 
-local AIO = AIO or require("aio")
+local AIO = AIO or require("AIO")
 
 local parangon = {
 
@@ -208,9 +208,8 @@ function parangon.calcPoints(player)
 end
 
 function parangon.onLogin(event, player)
-    local pGuid = player:GetGUIDLow()
-
-    local getParangonCharInfo = CharDBQuery('SELECT strength, agility, stamina, intellect FROM `'..parangon.config.db_name..'`.`characters_parangon` WHERE guid = '..pGuid)
+    local pAcc = player:GetAccountId()
+    local getParangonCharInfo = CharDBQuery('SELECT strength, agility, stamina, intellect FROM `'..parangon.config.db_name..'`.`characters_parangon` WHERE guid = '..pAcc)
     if getParangonCharInfo then
         player:setParangonInfo(getParangonCharInfo:GetUInt32(0), getParangonCharInfo:GetUInt32(1), getParangonCharInfo:GetUInt32(2), getParangonCharInfo:GetUInt32(3))
     else
