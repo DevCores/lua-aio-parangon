@@ -103,7 +103,7 @@ function parangon.onServerStart(event)
 end
 RegisterServerEvent(14, parangon.onServerStart)
 
-function parangon.setStats(player)
+function parangon_addon.setStats(player)
     local pLevel = player:GetLevel()
 
     if pLevel >= parangon.config.minLevel then
@@ -238,7 +238,7 @@ function parangon.onLogin(event, player)
     end
 
     parangon.calcPoints(player)
-    parangon.setStats(player)
+    parangon_addon.setStats(player)
 end
 RegisterPlayerEvent(3, parangon.onLogin)
 
@@ -303,7 +303,7 @@ function parangon.setExp(player, victim)
     if parangon.account[pAcc].exp >= parangon.account[pAcc].exp_max then
         player:SetParangonLevel(1)
     end
-    parangon.setStats(player)
+    parangon_addon.setStats(player)
 end
 
 function parangon.onKillCreatureOrPlayer(event, player, victim)
@@ -328,14 +328,14 @@ function Player:SetParangonLevel(level)
     local pAcc = self:GetAccountId()
 
     parangon.account[pAcc].level = parangon.account[pAcc].level + level
-    parangon.account[pAcc].exp = 0
+    parangon.account[pAcc].exp = arangon.account[pAcc].exp - parangon.account[pAcc].exp_max
     parangon.account[pAcc].exp_max = parangon.config.expMax * parangon.account[pAcc].level
 
     parangon.calcPoints(self)
 
     self:CastSpell(self, 24312, true)
     self:RemoveAura( 24312 )
-    if ( player:GetDbLocaleIndex() == 2 ) then
+    if ( self:GetDbLocaleIndex() == 2 ) then
       self:SendBroadcastMessage('|CFF00A2FFVous venez de passer un niveau de Paragon.\nFélicitations, vous êtes maintenant de niveau '..parangon.account[pAcc].level..'!')
     else
       self:SendBroadcastMessage('|CFF00A2FFYou have just passed a level of Paragon.\nCongratulations, you are now level '..parangon.account[pAcc].level..'!')
